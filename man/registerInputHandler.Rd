@@ -1,8 +1,8 @@
-\name{addInputHandler}
-\alias{addInputHandler}
+\name{registerInputHandler}
+\alias{registerInputHandler}
 \title{Register an Input Handler}
 \usage{
-  addInputHandler(type, fun, force = FALSE)
+  registerInputHandler(type, fun, force = FALSE)
 }
 \arguments{
   \item{type}{The type for which the handler should be
@@ -33,7 +33,12 @@
   For that reason, the \code{type} used should be very
   specific to this package to minimize the risk of
   colliding with another Shiny package which might use this
-  data type name.
+  data type name. We recommend the format of
+  "packageName.widgetName".
+
+  Currently Shiny registers the following handlers:
+  \code{shiny.matrix}, \code{shiny.number}, and
+  \code{shiny.date}.
 
   The \code{type} of a custom Shiny Input widget will be
   deduced using the \code{getType()} JavaScript function on
