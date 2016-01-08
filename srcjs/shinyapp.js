@@ -30,11 +30,16 @@ var ShinyApp = function() {
       ".clientdata_allowDataUriScheme": typeof WebSocket !== 'undefined'
     });
 
-    this.$socket = this.createSocket();
-    this.$initialInput = initialInput;
-    $.extend(this.$inputValues, initialInput);
+    var self = this;
+    this.createSocket(true)
+    .then(function(sock){
+console.log(sock);
+      self.$socket = sock;
+      self.$initialInput = initialInput;
+      $.extend(self.$inputValues, initialInput);
 
-    this.$updateConditionals();
+      self.$updateConditionals();
+    });
   };
 
   this.isConnected = function() {
@@ -68,34 +73,36 @@ var ShinyApp = function() {
       return ws;
     };
 
-    var socket = createSocketFunc();
-    socket.onopen = function() {
-      $(document).trigger({
-        type: 'shiny:connected',
-        socket: socket
-      });
-      socket.send(JSON.stringify({
-        method: 'init',
-        data: self.$initialInput
-      }));
+    return createSocketFunc(true)
+    .then(function(socket){
+      socket.onopen = function() {
+        $(document).trigger({
+          type: 'shiny:connected',
+          socket: socket
+        });
+        socket.send(JSON.stringify({
+          method: 'init',
+          data: self.$initialInput
+        }));
 
-      while (self.$pendingMessages.length) {
-        var msg = self.$pendingMessages.shift();
-        socket.send(msg);
-      }
-    };
-    socket.onmessage = function(e) {
-      self.dispatchMessage(e.data);
-    };
-    socket.onclose = function() {
-      $(document).trigger({
-        type: 'shiny:disconnected',
-        socket: socket
-      });
-      $(document.body).addClass('disconnected');
-      self.$notifyDisconnected();
-    };
-    return socket;
+        while (self.$pendingMessages.length) {
+          var msg = self.$pendingMessages.shift();
+          socket.send(msg);
+        }
+      };
+      socket.onmessage = function(e) {
+        self.dispatchMessage(e.data);
+      };
+      socket.onclose = function() {
+        $(document).trigger({
+          type: 'shiny:disconnected',
+          socket: socket
+        });
+        $(document.body).addClass('disconnected');
+        self.$notifyDisconnected();
+      };
+      return socket;
+    });
   };
 
   this.sendInput = function(values) {
